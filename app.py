@@ -3,6 +3,7 @@ import json
 from flask import Flask, jsonify, request, abort
 import logging
 import re
+from urllib.parse import unquote
 
 app = Flask(__name__)
 
@@ -158,11 +159,10 @@ def scrape_user_api(username):
 
 @app.route('/profile_image/<path:url>')
 def proxy_profile_image(url):
-    image_url = f"https://{url}"
+    decoded_url = unquote(url)  # this will decode the full Instagram URL
     try:
-        response = requests.get(image_url, stream=True, timeout=5)
+        response = requests.get(decoded_url, stream=True, timeout=5)
         response.raise_for_status()
         return Response(response.content, content_type=response.headers['Content-Type'])
     except:
         abort(404)
-
