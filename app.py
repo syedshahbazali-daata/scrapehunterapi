@@ -157,12 +157,18 @@ def scrape_user_api(username):
         abort(404, description="User not found or error occurred.")
     return jsonify(result), 200
 
-@app.route('/profile_image/<path:url>')
-def proxy_profile_image(url):
-    decoded_url = unquote(url)  # this will decode the full Instagram URL
+@app.route('/proxy-image')
+def proxy_image():
+    instagram_url = request.args.get('url')
+    print(f"Requested URL: {instagram_url}")
+
     try:
-        response = requests.get(decoded_url, stream=True, timeout=5)
+        response = requests.get(instagram_url, stream=True)
         response.raise_for_status()
-        return Response(response.content, content_type=response.headers['Content-Type'])
-    except:
-        abort(404)
+
+        return Response(
+            response.iter_content(chunk_size=1024),
+            content_type=response.headers['Content-Type']
+        )
+    except requests.RequestException as e:
+        return f"Failed to fetch image: {e}", 500
