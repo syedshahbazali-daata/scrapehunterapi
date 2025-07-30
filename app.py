@@ -3,7 +3,7 @@ import json
 from flask import Flask, jsonify, request, abort, Response
 import logging
 import re
-from urllib.parse import unquote
+import urllib.parse
 
 app = Flask(__name__)
 
@@ -26,6 +26,7 @@ proxies = {
 
 logging.basicConfig(level=logging.INFO)
 
+
 # Example usage:
 def scrape_user(username: str) -> dict:
     # Instagram usernames: 1-30 chars, letters, numbers, periods, underscores
@@ -47,12 +48,11 @@ def scrape_user(username: str) -> dict:
     except (KeyError, json.JSONDecodeError) as e:
         logging.error(f"Parsing error for user {username}: {e}")
         return None
-        
-
 
 
 def parse_user(data: dict) -> dict:
     """Parse instagram user's hidden web dataset for user's data"""
+
     # Helper to safely get nested values
     def get_nested(d, keys, default=None):
         for key in keys:
@@ -75,8 +75,10 @@ def parse_user(data: dict) -> dict:
             'thumb': node.get('display_url'),
             'url': node.get('video_url'),
             'views': node.get('video_view_count'),
-            'tagged': [tag.get('node', {}).get('user', {}).get('username') for tag in node.get('edge_media_to_tagged_user', {}).get('edges', [])],
-            'captions': [cap.get('node', {}).get('text') for cap in node.get('edge_media_to_caption', {}).get('edges', [])],
+            'tagged': [tag.get('node', {}).get('user', {}).get('username') for tag in
+                       node.get('edge_media_to_tagged_user', {}).get('edges', [])],
+            'captions': [cap.get('node', {}).get('text') for cap in
+                         node.get('edge_media_to_caption', {}).get('edges', [])],
             'comments_count': get_nested(node, ['edge_media_to_comment', 'count']),
             'comments_disabled': node.get('comments_disabled'),
             'taken_at': node.get('taken_at_timestamp'),
@@ -95,8 +97,10 @@ def parse_user(data: dict) -> dict:
             'src': node.get('display_url'),
             'url': node.get('video_url'),
             'views': node.get('video_view_count'),
-            'tagged': [tag.get('node', {}).get('user', {}).get('username') for tag in node.get('edge_media_to_tagged_user', {}).get('edges', [])],
-            'captions': [cap.get('node', {}).get('text') for cap in node.get('edge_media_to_caption', {}).get('edges', [])],
+            'tagged': [tag.get('node', {}).get('user', {}).get('username') for tag in
+                       node.get('edge_media_to_tagged_user', {}).get('edges', [])],
+            'captions': [cap.get('node', {}).get('text') for cap in
+                         node.get('edge_media_to_caption', {}).get('edges', [])],
             'comments_count': get_nested(node, ['edge_media_to_comment', 'count']),
             'comments_disabled': node.get('comments_disabled'),
             'taken_at': node.get('taken_at_timestamp'),
@@ -106,7 +110,8 @@ def parse_user(data: dict) -> dict:
             'duration': node.get('video_duration'),
         })
     # Extract related profiles
-    related_profiles = [edge.get('node', {}).get('username') for edge in get_nested(data, ['edge_related_profiles', 'edges'], [])]
+    related_profiles = [edge.get('node', {}).get('username') for edge in
+                        get_nested(data, ['edge_related_profiles', 'edges'], [])]
 
     result = {
         "name": data.get("full_name"),
@@ -145,7 +150,8 @@ def parse_user(data: dict) -> dict:
         "is_verified": result["is_verified"],
         "profile_image": result["profile_image"],
         "bio": result["bio"],
-        "posts": result['image_count']
+        "posts": result['image_count'],
+        "encoded_url": urllib.parse.quote(result["username"], safe=''),
     }
 
 
@@ -156,6 +162,7 @@ def scrape_user_api(username):
     if result is None:
         abort(404, description="User not found or error occurred.")
     return jsonify(result), 200
+
 
 @app.route('/proxy-image')
 def proxy_image():
