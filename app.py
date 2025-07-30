@@ -156,3 +156,13 @@ def scrape_user_api(username):
         abort(404, description="User not found or error occurred.")
     return jsonify(result), 200
 
+@app.route('/profile_image/<path:url>')
+def proxy_profile_image(url):
+    image_url = f"https://{url}"
+    try:
+        response = requests.get(image_url, stream=True, timeout=5)
+        response.raise_for_status()
+        return Response(response.content, content_type=response.headers['Content-Type'])
+    except:
+        abort(404)
+
