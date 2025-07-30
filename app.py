@@ -151,7 +151,7 @@ def parse_user(data: dict) -> dict:
         "profile_image": result["profile_image"],
         "bio": result["bio"],
         "posts": result['image_count'],
-        "encoded_url": urllib.parse.quote(result["profile_image"], safe=''),
+        "encoded": urllib.parse.quote(result["profile_image"], safe=''),
     }
 
 
