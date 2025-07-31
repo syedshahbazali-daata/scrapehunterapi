@@ -179,3 +179,9 @@ def proxy_image():
         )
     except requests.RequestException as e:
         return f"Failed to fetch image: {e}", 500
+    
+    
+# alive check
+@app.route('/alive', methods=['GET'])
+def alive_check():
+    return jsonify({"status": "alive"}), 200
